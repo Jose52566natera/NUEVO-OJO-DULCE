@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ojo Dulce">
+<title>Ojo Dulce</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#f7f3ee;min-height:100vh}
+.app{max-width:500px;margin:0 auto;padding:14px 14px 60px}
+.header{text-align:center;padding:16px 0 10px}
+.header h1{font-size:22px;font-weight:700;color:#1a1a1a}
+.header p{font-size:12px;color:#bbb;margin-top:3px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0 16px}
+.stat{background:#fff;border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.sn{font-size:22px;font-weight:700}.sl{font-size:11px;color:#aaa;margin-top:1px}
+.gn{color:#1D9E75}.rn{color:#E24B4A}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.card{background:#fff;border-radius:16px;padding:16px 10px 14px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08);position:relative;-webkit-tap-highlight-color:transparent;transition:transform 0.1s}
+.card:active{transform:scale(0.96)}
+.card-icon{font-size:32px;margin-bottom:6px}
+.card-name{font-size:13px;font-weight:600;color:#222;margin-bottom:5px}
+.card-badge{font-size:11px;padding:2px 8px;border-radius:20px;display:inline-block}
+.card-badge.ok{background:#e8f7f2;color:#1D9E75}
+.card-badge.falta{background:#FCEBEB;color:#A32D2D}
+
+/* MODAL */
+.overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:100}
+.overlay.open{display:block}
+.modal{position:fixed;bottom:0;left:0;right:0;background:#f7f3ee;border-radius:22px 22px 0 0;z-index:101;max-height:85vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.3s ease}
+.modal.open{transform:translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid #ece8e2}
+.modal-title{font-size:17px;font-weight:700;color:#1a1a1a;display:flex;align-items:center;gap:8px}
+.modal-close{width:30px;height:30px;border-radius:50%;border:none;background:#e8e4de;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#666}
+.modal-body{overflow-y:auto;padding:8px 14px 20px;-webkit-overflow-scrolling:touch}
+.item{display:flex;align-items:center;padding:11px 4px;border-bottom:1px solid #ede9e3}
+.item:last-child{border-bottom:none}
+.iname{flex:1;font-size:14px;color:#222}
+.tog{width:50px;height:29px;border-radius:15px;border:none;position:relative;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tog.on{background:#1D9E75}.tog.off{background:#E24B4A}
+.tog::after{content:'';position:absolute;width:23px;height:23px;border-radius:50%;background:#fff;top:3px;box-shadow:0 1px 4px rgba(0,0,0,0.25)}
+.tog.on::after{left:24px}.tog.off::after{left:3px}
+
+.fbox{background:#FCEBEB;border-radius:12px;padding:12px 14px;margin-bottom:10px;display:none}
+.ft{font-size:12px;font-weight:600;color:#A32D2D;margin-bottom:4px}
+.fl{font-size:12px;color:#993C1D;line-height:1.7}
+.cbtn{display:block;width:100%;padding:13px;background:#fff;border:1px solid #ddd;border-radius:14px;font-size:14px;color:#555;text-align:center;font-family:inherit;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>OJO DULCE 🍓</h1>
+    <p>App hecha por un ñoño q te ama</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="sn" id="st">0</div><div class="sl">Total</div></div>
+    <div class="stat"><div class="sn gn" id="sok">0</div><div class="sl">Hay</div></div>
+    <div class="stat"><div class="sn rn" id="sno">0</div><div class="sl">Falta</div></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div id="fbox" class="fbox"><div class="ft">⚠️ Falta comprar</div><div class="fl" id="fl"></div></div>
+  <button class="cbtn" onclick="compartir()">📋 Copiar lista de faltantes</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="cerrar()"></div>
+<div class="modal" id="modal">
+  <div class="modal-header">
+    <span class="modal-title" id="modal-title"></span>
+    <button class="modal-close" onclick="cerrar()">✕</button>
+  </div>
+  <div class="modal-body" id="modal-body"></div>
+</div>
+
+<script>
+var D = [
+  {cat:"Fruteria", icon:"🍋", items:[
+    {n:"Limones",v:1},{n:"Repollo",v:0},{n:"Chile rojo",v:1},{n:"Tomatillo",v:1},
+    {n:"Elote",v:0},{n:"Fresa",v:1},{n:"Mango",v:0},{n:"Platano",v:0}
+  ]},
+  {cat:"Desechable", icon:"🥤", items:[
+    {n:"Vaso 10oz",v:1},{n:"Vaso 12oz",v:1},{n:"Vaso 16oz",v:0},{n:"Vaso 5 1/2",v:1},
+    {n:"Vaso termico 10oz",v:1},{n:"Vaso termico 12oz",v:1},{n:"Tenedor mediano",v:1},
+    {n:"Cuchara mediana",v:1},{n:"Popote",v:1},{n:"Palo mangonada",v:1},
+    {n:"Servilleta",v:1},{n:"Charola 066",v:1},{n:"Charola 855",v:1},
+    {n:"Charola 9h",v:1},{n:"Portavasos",v:1}
+  ]},
+  {cat:"Fritura", icon:"🍟", items:[
+    {n:"Huesito",v:1},{n:"Cheeto naranja",v:1},{n:"Riquecho hot",v:1},
+    {n:"Duro",v:1},{n:"Tostito",v:1},{n:"Nacho",v:0},{n:"Conchitas",v:1}
+  ]},
+  {cat:"Complementos", icon:"🧴", items:[
+    {n:"Salsa Valentina",v:1},{n:"Salsa botanera",v:1},{n:"Catsup",v:1},
+    {n:"Mayonesa",v:1},{n:"Mantequilla",v:1},{n:"Chile limon",v:1},
+    {n:"Chamoy",v:1},{n:"Sal",v:1},{n:"Cueritos",v:1},{n:"Queso amarillo",v:1},
+    {n:"Crema liquida",v:1},{n:"Hersheys chocolate",v:1},{n:"Hersheys fresa",v:0},
+    {n:"Lechera",v:1},{n:"Dulce de leche",v:1},{n:"Cobertura chocolate",v:1},
+    {n:"Nutella",v:1},{n:"Crema alpura",v:1},{n:"Clavel",v:1},{n:"Cocoa",v:1},
+    {n:"Crema batida",v:1}
+  ]},
+  {cat:"Toppings", icon:"🍫", items:[
+    {n:"Oreo",v:0},{n:"Kranky",v:0},{n:"Lunetas",v:0},
+    {n:"Granillo colores",v:1},{n:"Granillo chocolate",v:1},
+    {n:"Coco",v:1},{n:"Nuez",v:1},{n:"Granola",v:1}
+  ]}
+];
+
+window.onload = function() {
+  renderGrid();
+  stats();
+};
+
+function renderGrid() {
+  var grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  for (var i = 0; i < D.length; i++) {
+    var c = D[i];
+    var faltan = 0;
+    for (var j = 0; j < c.items.length; j++) { if (c.items[j].v === 0) faltan++; }
+    var bclass = faltan > 0 ? "card-badge falta" : "card-badge ok";
+    var btxt = faltan > 0 ? faltan + " falta" : "Todo ok";
+    var card = document.createElement("div");
+    card.className = "card";
+    card.setAttribute("data-ci", i);
+    card.innerHTML = '<div class="card-icon">' + c.icon + '</div>' +
+      '<div class="card-name">' + c.cat + '</div>' +
+      '<span class="' + bclass + '">' + btxt + '</span>';
+    card.onclick = (function(idx){ return function(){ abrirModal(idx); }; })(i);
+    grid.appendChild(card);
+  }
+}
+
+function abrirModal(ci) {
+  var c = D[ci];
+  document.getElementById("modal-title").innerHTML = c.icon + " " + c.cat;
+  var body = document.getElementById("modal-body");
+  body.innerHTML = "";
+  for (var j = 0; j < c.items.length; j++) {
+    var it = c.items[j];
+    var div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = '<span class="iname">' + it.n + '</span>' +
+      '<button class="tog ' + (it.v===1?"on":"off") + '" data-ci="' + ci + '" data-ii="' + j + '" onclick="flip(this)"></button>';
+    body.appendChild(div);
+  }
+  document.getElementById("overlay").className = "overlay open";
+  document.getElementById("modal").className = "modal open";
+}
+
+function cerrar() {
+  document.getElementById("overlay").className = "overlay";
+  document.getElementById("modal").className = "modal";
+  renderGrid();
+}
+
+function flip(btn) {
+  var ci = parseInt(btn.getAttribute("data-ci"));
+  var ii = parseInt(btn.getAttribute("data-ii"));
+  D[ci].items[ii].v = D[ci].items[ii].v === 1 ? 0 : 1;
+  btn.className = "tog " + (D[ci].items[ii].v === 1 ? "on" : "off");
+  stats();
+}
+
+function stats() {
+  var total = 0, ok = 0, no = 0, faltan = [];
+  for (var i = 0; i < D.length; i++) {
+    for (var j = 0; j < D[i].items.length; j++) {
+      total++;
+      if (D[i].items[j].v === 1) ok++;
+      else { no++; faltan.push(D[i].items[j].n); }
+    }
+  }
+  document.getElementById("st").textContent = total;
+  document.getElementById("sok").textContent = ok;
+  document.getElementById("sno").textContent = no;
+  var fb = document.getElementById("fbox");
+  var fl = document.getElementById("fl");
+  if (no > 0) { fb.style.display = "block"; fl.textContent = faltan.join(" · "); }
+  else { fb.style.display = "none"; }
+}
+
+function compartir() {
+  var faltan = [];
+  for (var i = 0; i < D.length; i++) {
+    for (var j = 0; j < D[i].items.length; j++) {
+      if (D[i].items[j].v === 0) faltan.push(D[i].items[j].n);
+    }
+  }
+  if (faltan.length === 0) { alert("No falta nada, todo completo!"); return; }
+  var txt = "Restock Ojo Dulce:\n" + faltan.map(function(f){ return "- " + f; }).join("\n");
+  if (navigator.share) { navigator.share({title:"Faltantes Ojo Dulce", text:txt}); }
+  else if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(function(){ alert("Lista copiada!"); }); }
+  else { prompt("Copia esta lista:", txt); }
+}
+</script>
+</body>
+</html>
