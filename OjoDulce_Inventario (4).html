@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ojo Dulce">
+<title>Ojo Dulce</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#f7f3ee;min-height:100vh}
+.app{max-width:500px;margin:0 auto;padding:14px 14px 80px}
+.header{text-align:center;padding:14px 0 8px}
+.header h1{font-size:21px;font-weight:700;color:#1a1a1a}
+.header p{font-size:11px;color:#bbb;margin-top:2px}
+
+/* TABS */
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:#e8e3dc;border-radius:12px;padding:3px;margin:10px 0 14px}
+.tab{padding:8px;text-align:center;font-size:13px;font-weight:500;color:#888;border-radius:9px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tab.active{background:#fff;color:#1a1a1a;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:0 0 14px}
+.stat{background:#fff;border-radius:12px;padding:10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.sn{font-size:20px;font-weight:700}.sl{font-size:11px;color:#aaa;margin-top:1px}
+.gn{color:#1D9E75}.rn{color:#E24B4A}.bn{color:#4A7CE2}
+
+/* GRID CARDS */
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.card{background:#fff;border-radius:16px;padding:14px 8px 12px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08);-webkit-tap-highlight-color:transparent;transition:transform 0.1s}
+.card:active{transform:scale(0.95)}
+.card-icon{font-size:30px;margin-bottom:5px}
+.card-name{font-size:12px;font-weight:600;color:#222;margin-bottom:4px}
+.card-badge{font-size:10px;padding:2px 7px;border-radius:20px;display:inline-block}
+.card-badge.ok{background:#e8f7f2;color:#1D9E75}
+.card-badge.falta{background:#FCEBEB;color:#A32D2D}
+.card-badge.blue{background:#eaf0fd;color:#4A7CE2}
+
+/* VENTAS GRID - botones de producto */
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.vcard{background:#fff;border-radius:16px;padding:14px 10px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08);-webkit-tap-highlight-color:transparent;transition:transform 0.1s;position:relative}
+.vcard:active{transform:scale(0.95)}
+.vcard-icon{font-size:28px;margin-bottom:5px}
+.vcard-name{font-size:13px;font-weight:600;color:#222;margin-bottom:2px}
+.vcard-price{font-size:11px;color:#aaa}
+.vcard-count{position:absolute;top:8px;right:10px;background:#4A7CE2;color:#fff;border-radius:20px;font-size:11px;font-weight:700;padding:2px 7px;min-width:22px}
+.vcard-count.zero{background:#e8e3dc;color:#bbb}
+
+/* RESUMEN VENTAS */
+.resumen{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.res-title{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:10px}
+.res-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f0eb}
+.res-item:last-child{border-bottom:none}
+.res-name{font-size:13px;color:#333}
+.res-num{font-size:13px;font-weight:700;color:#4A7CE2}
+.res-total{display:flex;justify-content:space-between;padding:10px 0 0;margin-top:4px;border-top:2px solid #f0ebe4}
+.res-total span{font-size:14px;font-weight:700;color:#1a1a1a}
+
+.cbtn{display:block;width:100%;padding:12px;background:#fff;border:1px solid #ddd;border-radius:14px;font-size:14px;color:#555;text-align:center;font-family:inherit;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:8px}
+.rbtn{display:block;width:100%;padding:12px;background:#FCEBEB;border:1px solid #f5cdc9;border-radius:14px;font-size:14px;color:#A32D2D;text-align:center;font-family:inherit;cursor:pointer;margin-bottom:8px}
+
+/* FALTANTES */
+.fbox{background:#FCEBEB;border-radius:12px;padding:12px 14px;margin-bottom:10px;display:none}
+.ft{font-size:12px;font-weight:600;color:#A32D2D;margin-bottom:4px}
+.fl{font-size:12px;color:#993C1D;line-height:1.7}
+
+/* MODAL */
+.overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:100}
+.overlay.open{display:block}
+.modal{position:fixed;bottom:0;left:0;right:0;background:#f7f3ee;border-radius:22px 22px 0 0;z-index:101;max-height:85vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.3s ease}
+.modal.open{transform:translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid #ece8e2}
+.modal-title{font-size:17px;font-weight:700;color:#1a1a1a}
+.modal-close{width:30px;height:30px;border-radius:50%;border:none;background:#e8e4de;font-size:16px;cursor:pointer;color:#666}
+.modal-body{overflow-y:auto;padding:8px 14px 20px;-webkit-overflow-scrolling:touch}
+.item{display:flex;align-items:center;padding:11px 4px;border-bottom:1px solid #ede9e3}
+.item:last-child{border-bottom:none}
+.iname{flex:1;font-size:14px;color:#222}
+.tog{width:50px;height:29px;border-radius:15px;border:none;position:relative;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tog.on{background:#1D9E75}.tog.off{background:#E24B4A}
+.tog::after{content:'';position:absolute;width:23px;height:23px;border-radius:50%;background:#fff;top:3px;box-shadow:0 1px 4px rgba(0,0,0,0.25)}
+.tog.on::after{left:24px}.tog.off::after{left:3px}
+
+.page{display:none}.page.active{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>OJO DULCE 🍓</h1>
+    <p>App hecha por un ñoño q te ama</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="irA('inv',this)">📦 Stock</div>
+    <div class="tab" onclick="irA('ventas',this)">💰 Vender</div>
+    <div class="tab" onclick="irA('resumen',this)">📊 Resumen</div>
+  </div>
+
+  <!-- INVENTARIO -->
+  <div id="page-inv" class="page active">
+    <div class="stats">
+      <div class="stat"><div class="sn" id="st">0</div><div class="sl">Total</div></div>
+      <div class="stat"><div class="sn gn" id="sok">0</div><div class="sl">Hay</div></div>
+      <div class="stat"><div class="sn rn" id="sno">0</div><div class="sl">Falta</div></div>
+    </div>
+    <div class="grid" id="grid-inv"></div>
+    <div id="fbox" class="fbox"><div class="ft">⚠️ Falta comprar</div><div class="fl" id="fl"></div></div>
+    <button class="cbtn" onclick="compartirFalta()">📋 Copiar lista de faltantes</button>
+  </div>
+
+  <!-- VENTAS -->
+  <div id="page-ventas" class="page">
+    <div class="stats">
+      <div class="stat"><div class="sn bn" id="vtotal">0</div><div class="sl">Ventas hoy</div></div>
+      <div class="stat"><div class="sn gn" id="vmas">—</div><div class="sl">Más vendido</div></div>
+      <div class="stat"><div class="sn rn" id="vagot">0</div><div class="sl">Agotados</div></div>
+    </div>
+    <div class="vgrid" id="grid-ventas"></div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div id="page-resumen" class="page">
+    <div class="resumen">
+      <div class="res-title">📊 Resumen del día</div>
+      <div id="res-lista"></div>
+      <div class="res-total"><span>Total vendido</span><span id="res-total-num">0 unidades</span></div>
+    </div>
+    <button class="cbtn" onclick="compartirResumen()">📋 Copiar resumen</button>
+    <button class="rbtn" onclick="resetVentas()">🗑️ Reiniciar conteo del día</button>
+  </div>
+</div>
+
+<!-- MODAL INVENTARIO -->
+<div class="overlay" id="overlay" onclick="cerrar()"></div>
+<div class="modal" id="modal">
+  <div class="modal-header">
+    <span class="modal-title" id="modal-title"></span>
+    <button class="modal-close" onclick="cerrar()">✕</button>
+  </div>
+  <div class="modal-body" id="modal-body"></div>
+</div>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(function(){});
+}
+
+var INV = [
+  {cat:"Fruteria", icon:"🍋", items:[
+    {n:"Limones",v:1},{n:"Repollo",v:0},{n:"Chile rojo",v:1},{n:"Tomatillo",v:1},
+    {n:"Elote",v:0},{n:"Fresa",v:1},{n:"Mango",v:0},{n:"Platano",v:0}
+  ]},
+  {cat:"Desechable", icon:"🥤", items:[
+    {n:"Vaso 10oz",v:1},{n:"Vaso 12oz",v:1},{n:"Vaso 16oz",v:0},{n:"Vaso 5 1/2",v:1},
+    {n:"Vaso termico 10oz",v:1},{n:"Vaso termico 12oz",v:1},{n:"Tenedor mediano",v:1},
+    {n:"Cuchara mediana",v:1},{n:"Popote",v:1},{n:"Palo mangonada",v:1},
+    {n:"Servilleta",v:1},{n:"Charola 066",v:1},{n:"Charola 855",v:1},
+    {n:"Charola 9h",v:1},{n:"Portavasos",v:1}
+  ]},
+  {cat:"Fritura", icon:"🍟", items:[
+    {n:"Huesito",v:1},{n:"Cheeto naranja",v:1},{n:"Riquecho hot",v:1},
+    {n:"Duro",v:1},{n:"Tostito",v:1},{n:"Nacho",v:0},{n:"Conchitas",v:1}
+  ]},
+  {cat:"Complementos", icon:"🧴", items:[
+    {n:"Salsa Valentina",v:1},{n:"Salsa botanera",v:1},{n:"Catsup",v:1},
+    {n:"Mayonesa",v:1},{n:"Mantequilla",v:1},{n:"Chile limon",v:1},
+    {n:"Chamoy",v:1},{n:"Sal",v:1},{n:"Cueritos",v:1},{n:"Queso amarillo",v:1},
+    {n:"Crema liquida",v:1},{n:"Hersheys chocolate",v:1},{n:"Hersheys fresa",v:0},
+    {n:"Lechera",v:1},{n:"Dulce de leche",v:1},{n:"Cobertura chocolate",v:1},
+    {n:"Nutella",v:1},{n:"Crema alpura",v:1},{n:"Clavel",v:1},{n:"Cocoa",v:1},
+    {n:"Crema batida",v:1}
+  ]},
+  {cat:"Toppings", icon:"🍫", items:[
+    {n:"Oreo",v:0},{n:"Kranky",v:0},{n:"Lunetas",v:0},
+    {n:"Granillo colores",v:1},{n:"Granillo chocolate",v:1},
+    {n:"Coco",v:1},{n:"Nuez",v:1},{n:"Granola",v:1}
+  ]}
+];
+
+// Productos que vende
+var PRODUCTOS = [
+  {n:"Fresas con crema", icon:"🍓", usa:[{cat:"Fruteria",item:"Fresa"},{cat:"Complementos",item:"Crema batida"},{cat:"Complementos",item:"Lechera"}]},
+  {n:"Nachos preparados", icon:"🧀", usa:[{cat:"Fritura",item:"Nacho"},{cat:"Complementos",item:"Queso amarillo"},{cat:"Complementos",item:"Chamoy"}]},
+  {n:"Cheetos preparados", icon:"🍊", usa:[{cat:"Fritura",item:"Cheeto naranja"},{cat:"Complementos",item:"Chamoy"},{cat:"Complementos",item:"Chile limon"}]},
+  {n:"Hielitos", icon:"🧊", usa:[]},
+  {n:"Bolsa de frituras", icon:"🛍️", usa:[]}
+];
+
+var ventas = {};
+for (var i = 0; i < PRODUCTOS.length; i++) ventas[PRODUCTOS[i].n] = 0;
+
+function guardar() {
+  try {
+    var inv = {};
+    for (var i = 0; i < INV.length; i++)
+      for (var j = 0; j < INV[i].items.length; j++)
+        inv[INV[i].cat+"|"+INV[i].items[j].n] = INV[i].items[j].v;
+    localStorage.setItem("ojodulce_inv", JSON.stringify(inv));
+    localStorage.setItem("ojodulce_ventas", JSON.stringify(ventas));
+  } catch(e){}
+}
+
+function cargar() {
+  try {
+    var inv = localStorage.getItem("ojodulce_inv");
+    if (inv) {
+      var s = JSON.parse(inv);
+      for (var i = 0; i < INV.length; i++)
+        for (var j = 0; j < INV[i].items.length; j++) {
+          var k = INV[i].cat+"|"+INV[i].items[j].n;
+          if (s[k] !== undefined) INV[i].items[j].v = s[k];
+        }
+    }
+    var v = localStorage.getItem("ojodulce_ventas");
+    if (v) ventas = JSON.parse(v);
+  } catch(e){}
+}
+
+window.onload = function() {
+  cargar();
+  renderInv();
+  renderVentas();
+  statsInv();
+  statsVentas();
+};
+
+function irA(page, tab) {
+  var pages = document.querySelectorAll(".page");
+  for (var i = 0; i < pages.length; i++) pages[i].className = "page";
+  document.getElementById("page-"+page).className = "page active";
+  var tabs = document.querySelectorAll(".tab");
+  for (var i = 0; i < tabs.length; i++) tabs[i].className = "tab";
+  tab.className = "tab active";
+  if (page === "resumen") renderResumen();
+}
+
+// ---- INVENTARIO ----
+function renderInv() {
+  var grid = document.getElementById("grid-inv");
+  grid.innerHTML = "";
+  for (var i = 0; i < INV.length; i++) {
+    var c = INV[i];
+    var faltan = 0;
+    for (var j = 0; j < c.items.length; j++) if (c.items[j].v === 0) faltan++;
+    var bc = faltan > 0 ? "card-badge falta" : "card-badge ok";
+    var bt = faltan > 0 ? faltan+" falta" : "Todo ok";
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = '<div class="card-icon">'+c.icon+'</div><div class="card-name">'+c.cat+'</div><span class="'+bc+'">'+bt+'</span>';
+    card.onclick = (function(idx){ return function(){ abrirModal(idx); }; })(i);
+    grid.appendChild(card);
+  }
+}
+
+function abrirModal(ci) {
+  var c = INV[ci];
+  document.getElementById("modal-title").textContent = c.icon+" "+c.cat;
+  var body = document.getElementById("modal-body");
+  body.innerHTML = "";
+  for (var j = 0; j < c.items.length; j++) {
+    var it = c.items[j];
+    var div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = '<span class="iname">'+it.n+'</span><button class="tog '+(it.v===1?"on":"off")+'" data-ci="'+ci+'" data-ii="'+j+'" onclick="flipInv(this)"></button>';
+    body.appendChild(div);
+  }
+  document.getElementById("overlay").className = "overlay open";
+  document.getElementById("modal").className = "modal open";
+}
+
+function cerrar() {
+  document.getElementById("overlay").className = "overlay";
+  document.getElementById("modal").className = "modal";
+  renderInv();
+  statsInv();
+}
+
+function flipInv(btn) {
+  var ci = parseInt(btn.getAttribute("data-ci"));
+  var ii = parseInt(btn.getAttribute("data-ii"));
+  INV[ci].items[ii].v = INV[ci].items[ii].v === 1 ? 0 : 1;
+  btn.className = "tog "+(INV[ci].items[ii].v===1?"on":"off");
+  guardar();
+  statsInv();
+}
+
+function statsInv() {
+  var total=0,ok=0,no=0,faltan=[];
+  for (var i=0;i<INV.length;i++)
+    for (var j=0;j<INV[i].items.length;j++) {
+      total++;
+      if (INV[i].items[j].v===1) ok++;
+      else { no++; faltan.push(INV[i].items[j].n); }
+    }
+  document.getElementById("st").textContent=total;
+  document.getElementById("sok").textContent=ok;
+  document.getElementById("sno").textContent=no;
+  var fb=document.getElementById("fbox"), fl=document.getElementById("fl");
+  if (no>0) { fb.style.display="block"; fl.textContent=faltan.join(" · "); }
+  else fb.style.display="none";
+}
+
+function compartirFalta() {
+  var faltan=[];
+  for (var i=0;i<INV.length;i++)
+    for (var j=0;j<INV[i].items.length;j++)
+      if (INV[i].items[j].v===0) faltan.push(INV[i].items[j].n);
+  if (!faltan.length) { alert("No falta nada!"); return; }
+  var txt="Restock Ojo Dulce:\n"+faltan.map(function(f){return "- "+f;}).join("\n");
+  if (navigator.share) navigator.share({text:txt});
+  else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){alert("Copiado!");});
+  else prompt("Copia:", txt);
+}
+
+// ---- VENTAS ----
+function renderVentas() {
+  var grid = document.getElementById("grid-ventas");
+  grid.innerHTML = "";
+  for (var i = 0; i < PRODUCTOS.length; i++) {
+    var p = PRODUCTOS[i];
+    var cnt = ventas[p.n] || 0;
+    var card = document.createElement("div");
+    card.className = "vcard";
+    card.setAttribute("data-pi", i);
+    card.innerHTML = '<div class="vcard-icon">'+p.icon+'</div>'+
+      '<div class="vcard-name">'+p.n+'</div>'+
+      '<span class="vcard-count '+(cnt===0?"zero":"")+'">'+cnt+'</span>';
+    card.onclick = (function(idx){ return function(){ registrarVenta(idx); }; })(i);
+    grid.appendChild(card);
+  }
+}
+
+function registrarVenta(pi) {
+  var p = PRODUCTOS[pi];
+  ventas[p.n] = (ventas[p.n]||0) + 1;
+
+  // Descontar del inventario si aplica
+  for (var k = 0; k < p.usa.length; k++) {
+    var uso = p.usa[k];
+    for (var i = 0; i < INV.length; i++) {
+      if (INV[i].cat === uso.cat) {
+        for (var j = 0; j < INV[i].items.length; j++) {
+          if (INV[i].items[j].n === uso.item && INV[i].items[j].v === 1) {
+            // No descuenta a 0 automáticamente — solo avisa si era el último
+          }
+        }
+      }
+    }
+  }
+
+  guardar();
+  renderVentas();
+  statsVentas();
+
+  // Feedback visual
+  var cards = document.querySelectorAll(".vcard");
+  if (cards[pi]) {
+    cards[pi].style.background = "#e8f7f2";
+    setTimeout(function(){ cards[pi].style.background = "#fff"; }, 300);
+  }
+}
+
+function statsVentas() {
+  var total = 0;
+  var max = 0, maxNom = "—", agotados = 0;
+  for (var i = 0; i < PRODUCTOS.length; i++) {
+    var cnt = ventas[PRODUCTOS[i].n] || 0;
+    total += cnt;
+    if (cnt > max) { max = cnt; maxNom = PRODUCTOS[i].icon; }
+  }
+  // contar agotados en inventario
+  for (var i=0;i<INV.length;i++)
+    for (var j=0;j<INV[i].items.length;j++)
+      if (INV[i].items[j].v===0) agotados++;
+  document.getElementById("vtotal").textContent = total;
+  document.getElementById("vmas").textContent = max > 0 ? maxNom : "—";
+  document.getElementById("vagot").textContent = agotados;
+}
+
+// ---- RESUMEN ----
+function renderResumen() {
+  var lista = document.getElementById("res-lista");
+  lista.innerHTML = "";
+  var total = 0;
+  for (var i = 0; i < PRODUCTOS.length; i++) {
+    var cnt = ventas[PRODUCTOS[i].n] || 0;
+    total += cnt;
+    var div = document.createElement("div");
+    div.className = "res-item";
+    div.innerHTML = '<span class="res-name">'+PRODUCTOS[i].icon+' '+PRODUCTOS[i].n+'</span><span class="res-num">'+cnt+'</span>';
+    lista.appendChild(div);
+  }
+  document.getElementById("res-total-num").textContent = total+" unidades";
+}
+
+function compartirResumen() {
+  var total = 0;
+  var lines = ["Resumen Ojo Dulce — "+new Date().toLocaleDateString("es-MX")];
+  for (var i = 0; i < PRODUCTOS.length; i++) {
+    var cnt = ventas[PRODUCTOS[i].n] || 0;
+    total += cnt;
+    lines.push(PRODUCTOS[i].icon+" "+PRODUCTOS[i].n+": "+cnt);
+  }
+  lines.push("Total: "+total+" unidades");
+  var txt = lines.join("\n");
+  if (navigator.share) navigator.share({text:txt});
+  else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){alert("Copiado!");});
+  else prompt("Copia:", txt);
+}
+
+function resetVentas() {
+  if (!confirm("¿Reiniciar el conteo del día?")) return;
+  for (var i = 0; i < PRODUCTOS.length; i++) ventas[PRODUCTOS[i].n] = 0;
+  guardar();
+  renderVentas();
+  statsVentas();
+  renderResumen();
+}
+</script>
+</body>
+</html>
